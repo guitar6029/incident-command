@@ -24,6 +24,11 @@ export class IncidentsController {
     return this.incidentsService.getIncidents();
   }
 
+  @Get(':id')
+  getIncidentById(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.incidentsService.getIncidentById(id);
+  }
+
   @Get(':id/logs')
   getIncidentLogReportById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.incidentLogService.listByIncidentId(id);

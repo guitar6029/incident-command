@@ -98,6 +98,15 @@ export class IncidentsService {
     return this.incidents[foundReportIndex];
   }
 
+  getIncidentById(id: string) {
+    const incident = this.incidents.find((ir: IncidentCase) => ir.id === id);
+    if (!incident) {
+      throw new NotFoundException(`Incident Report not found with id : ${id} `);
+    }
+
+    return incident;
+  }
+
   private logStatusChange(
     incidentId: string,
     fromStatus: IncidentStatus,
