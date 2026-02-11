@@ -7,6 +7,7 @@ import { CreateIncidentDto } from './dto/create-incident.dto';
 import { randomUUID } from 'crypto';
 import { IncidentCase, IncidentStatus } from './incidents.types';
 import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
+import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
 
 @Injectable()
 export class IncidentsService {
@@ -31,6 +32,8 @@ export class IncidentsService {
 
     [IncidentStatus.CANCELLED]: [],
   };
+
+  constructor(private readonly incidentLogsService: IncidentLogsService) {}
 
   create(dto: CreateIncidentDto) {
     //temp timestamp
@@ -81,13 +84,35 @@ export class IncidentsService {
         `Change of status is not allowed from ${foundReport.status} to ${dto.status}`,
       );
     }
+    const fromStatus = foundReport.status;
 
     // change status
     this.updatedIncidentStatus(foundReportIndex, dto.status);
+
     // update the updateAt
     this.updateIncidentTimestamp(foundReportIndex);
 
+    //log helper
+    this.logStatusChange(foundReport.id, fromStatus, dto.status, dto);
+
     return this.incidents[foundReportIndex];
+  }
+
+  private logStatusChange(
+    incidentId: string,
+    fromStatus: IncidentStatus,
+    toStatus: IncidentStatus,
+    dto: UpdateIncidentStatusDto,
+  ) {
+    const payload = {
+      incidentId,
+      fromStatus,
+      toStatus,
+      by: dto.by,
+      note: dto.note,
+    };
+
+    this.incidentLogsService.appendStatusChange(payload);
   }
 
   private updateIncidentTimestamp(idx: number) {
