@@ -1,11 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { randomUUID } from 'crypto';
 import { IncidentCase, IncidentStatus } from './incidents.types';
+import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
 
 @Injectable()
 export class IncidentsService {
   private incidents: IncidentCase[] = [];
+  private readonly transitions: Record<IncidentStatus, IncidentStatus[]> = {
+    [IncidentStatus.OPEN]: [
+      IncidentStatus.IN_PROGRESS,
+      IncidentStatus.CANCELLED,
+    ],
+
+    [IncidentStatus.IN_PROGRESS]: [
+      IncidentStatus.RESOLVED,
+      IncidentStatus.CANCELLED,
+    ],
+
+    [IncidentStatus.RESOLVED]: [IncidentStatus.REOPENED],
+
+    [IncidentStatus.REOPENED]: [
+      IncidentStatus.IN_PROGRESS,
+      IncidentStatus.CANCELLED,
+    ],
+
+    [IncidentStatus.CANCELLED]: [],
+  };
 
   create(dto: CreateIncidentDto) {
     //temp timestamp
@@ -19,6 +44,7 @@ export class IncidentsService {
       ...dto,
       status: IncidentStatus.OPEN,
       createdAt: tempTimestamp,
+      updatedAt: tempTimestamp,
     };
 
     //push to list
@@ -33,5 +59,53 @@ export class IncidentsService {
 
   getIncidents() {
     return this.incidents;
+  }
+
+  updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto) {
+    const foundReportIndex = this.incidents.findIndex(
+      (ir: IncidentCase) => ir.id === id,
+    );
+    if (foundReportIndex === -1) {
+      throw new NotFoundException('Incident report not found');
+    }
+    //else if found
+    const foundReport = this.getIncidentReportByIndex(foundReportIndex);
+    // check if the desired status can be modified
+    const allowedChange = this.checkStatusChangeAllowed(
+      foundReport.status,
+      dto.status,
+    );
+
+    if (!allowedChange) {
+      throw new BadRequestException(
+        `Change of status is not allowed from ${foundReport.status} to ${dto.status}`,
+      );
+    }
+
+    // change status
+    this.updatedIncidentStatus(foundReportIndex, dto.status);
+    // update the updateAt
+    this.updateIncidentTimestamp(foundReportIndex);
+
+    return this.incidents[foundReportIndex];
+  }
+
+  private updateIncidentTimestamp(idx: number) {
+    this.incidents[idx].updatedAt = new Date().toISOString();
+  }
+
+  private getIncidentReportByIndex(idx: number) {
+    return this.incidents[idx];
+  }
+
+  private updatedIncidentStatus(idx: number, toStatus: IncidentStatus) {
+    this.incidents[idx].status = toStatus;
+  }
+
+  private checkStatusChangeAllowed(
+    fromStatus: IncidentStatus,
+    toStatus: IncidentStatus,
+  ) {
+    return this.transitions[fromStatus].includes(toStatus);
   }
 }

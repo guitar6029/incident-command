@@ -20,4 +20,5 @@ export type IncidentCase = {
   summary?: string;
   status: IncidentStatus;
   createdAt: string;
+  updatedAt: string;
 };

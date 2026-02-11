@@ -1,4 +1,4 @@
-import { IncidentStatus, Severity } from '../incidents.types';
+import { Severity } from '../incidents.types';
 import {
   IsString,
   IsEnum,
