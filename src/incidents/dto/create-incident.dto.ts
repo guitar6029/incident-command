@@ -20,10 +20,4 @@ export class CreateIncidentDto {
   @IsString()
   @IsOptional()
   summary?: string;
-
-  @IsEnum(IncidentStatus)
-  status: IncidentStatus;
-
-  @IsISO8601()
-  createdAt: string;
 }
