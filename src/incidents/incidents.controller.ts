@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentsService } from './incidents.service';
 import { IncidentCase } from './incidents.types';
@@ -16,8 +24,8 @@ export class IncidentsController {
     return this.incidentsService.getIncidents();
   }
 
-  @Get('/:id/logs')
-  getIncidentLogReportById(@Param('id') id: string) {
+  @Get(':id/logs')
+  getIncidentLogReportById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.incidentLogService.listByIncidentId(id);
   }
 
@@ -28,7 +36,7 @@ export class IncidentsController {
 
   @Patch(':id/status')
   updateIncidentReportStatus(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dtoPatch: UpdateIncidentStatusDto,
   ): IncidentCase {
     return this.incidentsService.updateIncidentStatus(id, dtoPatch);
