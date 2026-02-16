@@ -7,9 +7,10 @@ import { ActionsModule } from './actions/actions.module';
 import { HealthModule } from './health/health.module';
 import { IncidentLogsModule } from './incident-logs/incident-logs.module';
 import { IncidentAcknowledgeModule } from './incident-acknowledge/incident-acknowledge.module';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
-  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule, IncidentAcknowledgeModule],
+  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule, IncidentAcknowledgeModule, TicketsModule],
   controllers: [AppController],
   providers: [AppService],
 })
