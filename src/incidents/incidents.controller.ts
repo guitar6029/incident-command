@@ -18,6 +18,7 @@ import { RequestTimingInterceptor } from 'src/common/request-timing/request-timi
 import { OncallGuard } from 'src/common/oncall/oncall.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
+import { IncidentLog } from 'src/incident-logs/incident-logs.types';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)
@@ -26,17 +27,29 @@ export class IncidentsController {
     private readonly incidentsService: IncidentsService,
     private readonly incidentLogService: IncidentLogsService,
   ) {}
+
+  @Get('acknowledgments')
+  getAcknowledgedLogs(): IncidentLog[] {
+    return this.incidentLogService.listByAcknowledged();
+  }
+
+  @Get(':id/acknowledgments')
+  getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
+    this.incidentsService.getIncidentById(id);
+    return this.incidentLogService.listByIdAcknowledged(id);
+  }
+
   @Get()
   getIncidentReports(): IncidentCase[] {
     return this.incidentsService.getIncidents();
   }
 
-  @Patch(':id/ack')
+  @Patch(':id/acknowledgments')
   acknowledgeIncident(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: AcknoledgeIncidentDto,
   ) {
-    // the incidentService updates the ack properties
+    // the incidentService updates the acknowledgments properties
     return this.incidentsService.acknowledgeIncident(id, dto);
   }
 
