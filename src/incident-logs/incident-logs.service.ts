@@ -76,9 +76,18 @@ export class IncidentLogsService {
     );
   }
 
-  listByIncidentId(incidentId: string): IncidentLog[] {
-    return this.incidentLogs.filter(
-      (incidentLog: IncidentLog) => incidentLog.incidentId === incidentId,
-    );
+  listByIncidentId(
+    incidentId: string,
+    incidentType?: IncidentLogType,
+  ): IncidentLog[] {
+    return this.incidentLogs.filter((incidentLog: IncidentLog) => {
+      if (incidentType) {
+        return (
+          incidentLog.incidentId === incidentId &&
+          incidentLog.eventType === incidentType
+        );
+      }
+      return incidentLog.incidentId === incidentId;
+    });
   }
 }

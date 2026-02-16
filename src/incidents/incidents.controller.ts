@@ -8,6 +8,8 @@ import {
   Patch,
   UseGuards,
   UseInterceptors,
+  Query,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentsService } from './incidents.service';
@@ -18,7 +20,10 @@ import { RequestTimingInterceptor } from 'src/common/request-timing/request-timi
 import { OncallGuard } from 'src/common/oncall/oncall.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
-import { IncidentLog } from 'src/incident-logs/incident-logs.types';
+import {
+  IncidentLog,
+  IncidentLogType,
+} from 'src/incident-logs/incident-logs.types';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)
@@ -59,8 +64,13 @@ export class IncidentsController {
   }
 
   @Get(':id/logs')
-  getIncidentLogReportById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.incidentLogService.listByIncidentId(id);
+  getIncidentLogReportById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
+    type?: IncidentLogType,
+  ) {
+    this.incidentsService.getIncidentById(id);
+    return this.incidentLogService.listByIncidentId(id, type);
   }
 
   @Post()
