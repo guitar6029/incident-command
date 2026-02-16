@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket, TicketStatus } from './tickets.types';
@@ -25,5 +25,24 @@ export class TicketsService {
     //push to tickets
     this.tickets.push(payload);
     return payload;
+  }
+
+  findAll(): Ticket[] {
+    return this.tickets;
+  }
+
+  findById(id: string): Ticket {
+    const idx = this.getIndexOrThrow(id);
+    return this.tickets[idx];
+  }
+
+  private getIndexOrThrow(id: string) {
+    const idx = this.tickets.findIndex((ticket: Ticket) => ticket.id === id);
+
+    if (idx === -1) {
+      throw new NotFoundException(`Ticket with id ${id} not found`);
+    }
+
+    return idx;
   }
 }
