@@ -59,7 +59,7 @@ export class IncidentsController {
     @Body() dto: AcknoledgeIncidentDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    const by = (req as any).user.email;
+    const by = req.user.email;
     // the incidentService updates the acknowledgments properties
     return this.incidentsService.acknowledgeIncident(id, dto, by);
   }
