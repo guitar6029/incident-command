@@ -8,6 +8,8 @@ import { randomUUID } from 'crypto';
 import { IncidentCase, IncidentStatus } from './incidents.types';
 import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
 import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
+import { IncidentAcknowledgeService } from 'src/incident-acknowledge/incident-acknowledge.service';
+import { AcknoledgeIncidentDto } from 'src/incident-acknowledge/dto/acknowledge-incident.dto';
 
 @Injectable()
 export class IncidentsService {
@@ -33,7 +35,10 @@ export class IncidentsService {
     [IncidentStatus.CANCELLED]: [],
   };
 
-  constructor(private readonly incidentLogsService: IncidentLogsService) {}
+  constructor(
+    private readonly incidentLogsService: IncidentLogsService,
+    private readonly incidentAcknowledge: IncidentAcknowledgeService,
+  ) {}
 
   create(dto: CreateIncidentDto) {
     //temp timestamp
@@ -48,6 +53,9 @@ export class IncidentsService {
       status: IncidentStatus.OPEN,
       createdAt: tempTimestamp,
       updatedAt: tempTimestamp,
+      acknowledgedBy: null,
+      acknowledgedAt: null,
+      acknowledgedNote: null,
     };
 
     //push to list
@@ -64,13 +72,60 @@ export class IncidentsService {
     return this.incidents;
   }
 
-  updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto) {
-    const foundReportIndex = this.incidents.findIndex(
-      (ir: IncidentCase) => ir.id === id,
-    );
-    if (foundReportIndex === -1) {
-      throw new NotFoundException('Incident report not found');
+  acknowledgeIncident(id: string, dto: AcknoledgeIncidentDto) {
+    // check if incident exists
+    const incidentIndex = this.getIndexOrThrow(id);
+    // check incident status
+    const incident = this.incidents[incidentIndex];
+
+    // check if incident was already acknowledged
+    // check if acknowlegeAt is not null
+    const alreadyAcknowledged = incident.acknowledgedAt !== null;
+    if (alreadyAcknowledged) {
+      throw new BadRequestException('Incident has been already acknowledged');
     }
+    // check incident status
+    const incidentStatus = incident.status;
+
+    // returns true or false
+    const isAllowedAcknowledge =
+      this.incidentAcknowledge.allowedAcknowledgeCheck(incidentStatus);
+
+    if (!isAllowedAcknowledge) {
+      throw new BadRequestException(
+        `Acknoledgement of the incident is not allowed with current status : ${incidentStatus}`,
+      );
+    }
+    // returns
+    // acknowledgeBy, acknowledgeAt, and optional acknowledgedNote
+    const ackUpdatedValues = this.incidentAcknowledge.acknowledge(dto);
+
+    // now update the record
+    this.incidents[incidentIndex].acknowledgedBy =
+      ackUpdatedValues.acknowledgedBy;
+    this.incidents[incidentIndex].acknowledgedAt =
+      ackUpdatedValues.acknowledgedAt;
+    this.incidents[incidentIndex].acknowledgedNote =
+      ackUpdatedValues.acknowledgedNote ?? null;
+
+    const incidentForAckLog = {
+      incidentId: incident.id,
+      by: ackUpdatedValues.acknowledgedBy,
+      fromStatus: incident.status,
+      toStatus: incident.status,
+      note: ackUpdatedValues.acknowledgedNote ?? undefined,
+    };
+
+    this.updateIncidentTimestamp(incidentIndex);
+    // log the ack log
+    this.incidentLogsService.appendAcknowledgeLog(incidentForAckLog);
+
+    return this.incidents[incidentIndex];
+  }
+
+  updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto) {
+    const foundReportIndex = this.getIndexOrThrow(id);
+
     //else if found
     const foundReport = this.getIncidentReportByIndex(foundReportIndex);
     // check if the desired status can be modified
@@ -99,12 +154,8 @@ export class IncidentsService {
   }
 
   getIncidentById(id: string) {
-    const incident = this.incidents.find((ir: IncidentCase) => ir.id === id);
-    if (!incident) {
-      throw new NotFoundException(`Incident Report not found with id : ${id} `);
-    }
-
-    return incident;
+    const idx = this.getIndexOrThrow(id);
+    return this.incidents[idx];
   }
 
   private logStatusChange(
@@ -122,6 +173,17 @@ export class IncidentsService {
     };
 
     this.incidentLogsService.appendStatusChange(payload);
+  }
+
+  //so make this return index or throw
+  private getIndexOrThrow(id: string): number {
+    const idx = this.incidents.findIndex((ir: IncidentCase) => ir.id === id);
+
+    if (idx === -1) {
+      throw new NotFoundException(`Incident with id ${id} not found`);
+    }
+
+    return idx;
   }
 
   private updateIncidentTimestamp(idx: number) {

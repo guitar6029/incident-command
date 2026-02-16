@@ -2,6 +2,7 @@ import { IncidentStatus } from 'src/incidents/incidents.types';
 
 export enum IncidentLogType {
   'STATUS_CHANGED' = 'STATUS_CHANGED',
+  'ACKNOWLEDGED' = 'ACKNOWLEDGED',
 }
 
 export type IncidentLog = {

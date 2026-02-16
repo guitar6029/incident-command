@@ -5,6 +5,7 @@ import {
   IncidentLogType,
 } from './incident-logs.types';
 import { randomUUID } from 'crypto';
+import { IncidentStatus } from 'src/incidents/incidents.types';
 
 @Injectable()
 export class IncidentLogsService {
@@ -28,6 +29,33 @@ export class IncidentLogsService {
       by,
       note,
     };
+
+    this.incidentLogs.push(temp);
+
+    return temp;
+  }
+
+  appendAcknowledgeLog({
+    incidentId,
+    by,
+    fromStatus,
+    toStatus,
+    note,
+  }: IncidentLogAppend) {
+    const id = randomUUID();
+    const temp: IncidentLog = {
+      id,
+      incidentId,
+      fromStatus,
+      eventType: IncidentLogType.ACKNOWLEDGED,
+      toStatus,
+      at: new Date().toISOString(),
+      by,
+    };
+
+    if (note) {
+      temp.note = note;
+    }
 
     this.incidentLogs.push(temp);
 

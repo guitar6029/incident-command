@@ -2,10 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  Post,
   Param,
   ParseUUIDPipe,
   Patch,
-  Post,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,6 +17,7 @@ import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
 import { RequestTimingInterceptor } from 'src/common/request-timing/request-timing.interceptor';
 import { OncallGuard } from 'src/common/oncall/oncall.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
+import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)
@@ -30,6 +31,15 @@ export class IncidentsController {
     return this.incidentsService.getIncidents();
   }
 
+  @Patch(':id/ack')
+  acknowledgeIncident(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: AcknoledgeIncidentDto,
+  ) {
+    // the incidentService updates the ack properties
+    return this.incidentsService.acknowledgeIncident(id, dto);
+  }
+
   @Get(':id')
   getIncidentById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.incidentsService.getIncidentById(id);
@@ -41,6 +51,8 @@ export class IncidentsController {
   }
 
   @Post()
+  @UseGuards(OncallGuard)
+  @Roles('ONCALL')
   createIncidentReport(@Body() dto: CreateIncidentDto) {
     return this.incidentsService.create(dto);
   }

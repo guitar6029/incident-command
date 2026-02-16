@@ -1,11 +1,5 @@
 import { Severity } from '../incidents.types';
-import {
-  IsString,
-  IsEnum,
-  IsOptional,
-  IsEmail,
-  IsISO8601,
-} from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsEmail } from 'class-validator';
 
 export class CreateIncidentDto {
   @IsString()

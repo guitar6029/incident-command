@@ -6,9 +6,10 @@ import { UsersModule } from './users/users.module';
 import { ActionsModule } from './actions/actions.module';
 import { HealthModule } from './health/health.module';
 import { IncidentLogsModule } from './incident-logs/incident-logs.module';
+import { IncidentAcknowledgeModule } from './incident-acknowledge/incident-acknowledge.module';
 
 @Module({
-  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule],
+  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule, IncidentAcknowledgeModule],
   controllers: [AppController],
   providers: [AppService],
 })

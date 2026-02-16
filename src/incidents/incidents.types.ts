@@ -21,4 +21,7 @@ export type IncidentCase = {
   status: IncidentStatus;
   createdAt: string;
   updatedAt: string;
+  acknowledgedBy: string | null;
+  acknowledgedAt: string | null;
+  acknowledgedNote: string | null;
 };
