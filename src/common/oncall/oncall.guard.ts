@@ -38,6 +38,9 @@ export class OncallGuard implements CanActivate {
           'This email does not have enough permission to modify/cancel incidents',
         );
       }
+
+      // set the email
+      req.user = { email: emailValue };
     }
 
     return true;

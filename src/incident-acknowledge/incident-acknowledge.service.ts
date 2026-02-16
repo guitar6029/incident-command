@@ -5,14 +5,12 @@ import { IncidentStatus } from 'src/incidents/incidents.types';
 @Injectable()
 export class IncidentAcknowledgeService {
   acknowledge(dto: AcknoledgeIncidentDto): {
-    acknowledgedBy: string;
     acknowledgedAt: string;
     acknowledgedNote?: string | null;
   } {
     // if allowed, update the propertiesF
     // acknowledgedBy and acknowledgedAt and add optional ack note
     const tempIncidentUpdated = {
-      acknowledgedBy: dto.by,
       acknowledgedAt: new Date().toISOString(),
       acknowledgedNote: dto.note ?? null,
     };

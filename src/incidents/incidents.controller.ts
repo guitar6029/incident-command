@@ -2,14 +2,15 @@ import {
   Body,
   Controller,
   Get,
-  Post,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
+  Post,
+  Query,
+  Req,
   UseGuards,
   UseInterceptors,
-  Query,
-  ParseEnumPipe,
 } from '@nestjs/common';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentsService } from './incidents.service';
@@ -24,6 +25,7 @@ import {
   IncidentLog,
   IncidentLogType,
 } from 'src/incident-logs/incident-logs.types';
+import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)
@@ -50,12 +52,16 @@ export class IncidentsController {
   }
 
   @Patch(':id/acknowledgments')
+  @UseGuards(OncallGuard)
+  @Roles('ONCALL')
   acknowledgeIncident(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: AcknoledgeIncidentDto,
+    @Req() req: AuthenticatedRequest,
   ) {
+    const by = (req as any).user.email;
     // the incidentService updates the acknowledgments properties
-    return this.incidentsService.acknowledgeIncident(id, dto);
+    return this.incidentsService.acknowledgeIncident(id, dto, by);
   }
 
   @Get(':id')
@@ -86,7 +92,9 @@ export class IncidentsController {
   updateIncidentReportStatus(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dtoPatch: UpdateIncidentStatusDto,
+    @Req() req: AuthenticatedRequest,
   ): IncidentCase {
-    return this.incidentsService.updateIncidentStatus(id, dtoPatch);
+    const by = req.user.email;
+    return this.incidentsService.updateIncidentStatus(id, dtoPatch, by);
   }
 }

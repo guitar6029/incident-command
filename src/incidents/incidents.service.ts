@@ -72,7 +72,7 @@ export class IncidentsService {
     return this.incidents;
   }
 
-  acknowledgeIncident(id: string, dto: AcknoledgeIncidentDto) {
+  acknowledgeIncident(id: string, dto: AcknoledgeIncidentDto, by: string) {
     // check if incident exists
     const incidentIndex = this.getIndexOrThrow(id);
     // check incident status
@@ -101,8 +101,7 @@ export class IncidentsService {
     const ackUpdatedValues = this.incidentAcknowledge.acknowledge(dto);
 
     // now update the record
-    this.incidents[incidentIndex].acknowledgedBy =
-      ackUpdatedValues.acknowledgedBy;
+    this.incidents[incidentIndex].acknowledgedBy = by;
     this.incidents[incidentIndex].acknowledgedAt =
       ackUpdatedValues.acknowledgedAt;
     this.incidents[incidentIndex].acknowledgedNote =
@@ -110,7 +109,7 @@ export class IncidentsService {
 
     const incidentForAckLog = {
       incidentId: incident.id,
-      by: ackUpdatedValues.acknowledgedBy,
+      by,
       fromStatus: incident.status,
       toStatus: incident.status,
       note: ackUpdatedValues.acknowledgedNote ?? undefined,
@@ -123,7 +122,7 @@ export class IncidentsService {
     return this.incidents[incidentIndex];
   }
 
-  updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto) {
+  updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto, by: string) {
     const foundReportIndex = this.getIndexOrThrow(id);
 
     //else if found
@@ -148,7 +147,7 @@ export class IncidentsService {
     this.updateIncidentTimestamp(foundReportIndex);
 
     //log helper
-    this.logStatusChange(foundReport.id, fromStatus, dto.status, dto);
+    this.logStatusChange(foundReport.id, fromStatus, dto.status, dto, by);
 
     return this.incidents[foundReportIndex];
   }
@@ -163,12 +162,13 @@ export class IncidentsService {
     fromStatus: IncidentStatus,
     toStatus: IncidentStatus,
     dto: UpdateIncidentStatusDto,
+    by: string,
   ) {
     const payload = {
       incidentId,
       fromStatus,
       toStatus,
-      by: dto.by,
+      by,
       note: dto.note,
     };
 
