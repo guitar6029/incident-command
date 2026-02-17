@@ -10,9 +10,10 @@ import { IncidentAcknowledgeModule } from './incident-acknowledge/incident-ackno
 import { TicketsModule } from './tickets/tickets.module';
 import { TicketLogsModule } from './ticket-logs/ticket-logs.module';
 import { TicketAssignmentModule } from './ticket-assignment/ticket-assignment.module';
+import { EmployeesModule } from './employees/employees.module';
 
 @Module({
-  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule, IncidentAcknowledgeModule, TicketsModule, TicketLogsModule, TicketAssignmentModule],
+  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule, IncidentAcknowledgeModule, TicketsModule, TicketLogsModule, TicketAssignmentModule, EmployeesModule],
   controllers: [AppController],
   providers: [AppService],
 })
