@@ -20,26 +20,29 @@ import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { TicketLogsService } from 'src/ticket-logs/ticket-logs.service';
 import { TicketLogType } from 'src/ticket-logs/ticket-logs.types';
+import { AssignTicketDto } from './dto/assign-ticket.dto';
+import { TicketAssignmentService } from 'src/ticket-assignment/ticket-assignment.service';
 
 @Controller('tickets')
 export class TicketsController {
   constructor(
-    private readonly ticketsService: TicketsService,
-    private readonly ticketsLogService: TicketLogsService,
+    private readonly ticketService: TicketsService,
+    private readonly ticketLogService: TicketLogsService,
+    private readonly ticketAssignmentService: TicketAssignmentService,
   ) {}
 
   @Get()
   @UseGuards(ITGuard)
   @Roles('IT_HELP')
   getTickets() {
-    return this.ticketsService.findAll();
+    return this.ticketService.findAll();
   }
 
   @Get(':id')
   @UseGuards(ITGuard)
   @Roles('IT_HELP')
   getTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.ticketsService.findById(id);
+    return this.ticketService.findById(id);
   }
 
   @Get(':id/logs')
@@ -50,15 +53,25 @@ export class TicketsController {
     @Query('type', new ParseEnumPipe(TicketLogType, { optional: true }))
     type?: TicketLogType,
   ) {
-    this.ticketsService.findById(id);
-    return this.ticketsLogService.listByTicketId(id, type);
+    this.ticketService.findById(id);
+    return this.ticketLogService.listByTicketId(id, type);
   }
 
   @Post()
   @UseGuards(ITGuard)
   @Roles('IT_HELP')
   createTicket(@Body() dto: CreateTicketDto) {
-    return this.ticketsService.create(dto);
+    return this.ticketService.create(dto);
+  }
+
+  @Post(':id/assign')
+  @UseGuards(ITGuard)
+  @Roles('IT_HELP')
+  assignTicket(
+    @Param('id', new ParseUUIDPipe()) ticketId: string,
+    @Body() dto: AssignTicketDto,
+  ) {
+    return this.ticketAssignmentService.assignTicket(ticketId, dto);
   }
 
   @Patch(':id/status')
@@ -70,13 +83,13 @@ export class TicketsController {
     @Body() dto: UpdateTicketStatusDto,
   ) {
     const by = req.user.email;
-    return this.ticketsService.updateStatus({ id, dto, by });
+    return this.ticketService.updateStatus({ id, dto, by });
   }
 
   @Delete(':id')
   @UseGuards(ITGuard)
   @Roles('IT_HELP')
   deleteTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.ticketsService.deleteTicketById(id);
+    return this.ticketService.deleteTicketById(id);
   }
 }
