@@ -32,18 +32,18 @@ import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 export class IncidentsController {
   constructor(
     private readonly incidentsService: IncidentsService,
-    private readonly incidentLogService: IncidentLogsService,
+    private readonly incidentsLogService: IncidentLogsService,
   ) {}
 
   @Get('acknowledgments')
   getAcknowledgedLogs(): IncidentLog[] {
-    return this.incidentLogService.listByAcknowledged();
+    return this.incidentsLogService.listByAcknowledged();
   }
 
   @Get(':id/acknowledgments')
   getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
     this.incidentsService.getIncidentById(id);
-    return this.incidentLogService.listByIdAcknowledged(id);
+    return this.incidentsLogService.listByIdAcknowledged(id);
   }
 
   @Get()
@@ -76,7 +76,7 @@ export class IncidentsController {
     type?: IncidentLogType,
   ) {
     this.incidentsService.getIncidentById(id);
-    return this.incidentLogService.listByIncidentId(id, type);
+    return this.incidentsLogService.listByIncidentId(id, type);
   }
 
   @Post()
