@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket, TicketStatus } from './tickets.types';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
+import { TicketLogsService } from 'src/ticket-logs/ticket-logs.service';
 @Injectable()
 export class TicketsService {
   // add the Ticket type later
@@ -22,6 +23,8 @@ export class TicketsService {
 
     [TicketStatus.CANCELLED]: [],
   };
+
+  constructor(private readonly ticketsLogService: TicketLogsService) {}
 
   create(dto: CreateTicketDto): Ticket {
     const id = randomUUID();
@@ -87,6 +90,13 @@ export class TicketsService {
     this.updateTicketBy(index, by);
 
     //log heler later
+    this.ticketsLogService.appendStatusChange({
+      ticketId: id,
+      fromStatus,
+      toStatus: dto.status,
+      by,
+      note: dto.note,
+    });
 
     return this.tickets[index];
   }

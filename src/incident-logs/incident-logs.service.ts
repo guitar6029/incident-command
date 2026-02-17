@@ -26,8 +26,11 @@ export class IncidentLogsService {
       toStatus,
       at: new Date().toISOString(),
       by,
-      note,
     };
+
+    if (note) {
+      temp.note = note;
+    }
 
     this.incidentLogs.push(temp);
 
