@@ -50,6 +50,17 @@ export class TicketsService {
     return this.tickets;
   }
 
+  deleteTicketById(id: string): Ticket {
+    const idx = this.getIndexOrThrow(id);
+    const [deleted] = this.tickets.splice(idx, 1);
+    return deleted;
+  }
+
+  findIndexById(id: string): number {
+    const idx = this.getIndexOrThrow(id);
+    return idx;
+  }
+
   findById(id: string): Ticket {
     const idx = this.getIndexOrThrow(id);
     return this.tickets[idx];
@@ -99,6 +110,11 @@ export class TicketsService {
     });
 
     return this.tickets[index];
+  }
+
+  getTicketById(id: string) {
+    const idx = this.getIndexOrThrow(id);
+    return this.tickets[idx];
   }
 
   private updateTicketAt(index: number) {

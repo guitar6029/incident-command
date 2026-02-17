@@ -32,4 +32,15 @@ export class TicketLogsService {
 
     return temp;
   }
+
+  listByTicketId(ticketId: string, ticketType?: TicketLogType): TicketLog[] {
+    return this.ticketLogs.filter((ticketLog: TicketLog) => {
+      if (ticketType) {
+        return (
+          ticketLog.ticketId === ticketId && ticketLog.eventType === ticketType
+        );
+      }
+      return ticketLog.ticketId === ticketId;
+    });
+  }
 }

@@ -4,9 +4,11 @@ import {
   Delete,
   Get,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -14,13 +16,17 @@ import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ITGuard } from 'src/common/it/it.guard';
-import { TicketStatus } from './tickets.types';
 import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
+import { TicketLogsService } from 'src/ticket-logs/ticket-logs.service';
+import { TicketLogType } from 'src/ticket-logs/ticket-logs.types';
 
 @Controller('tickets')
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  constructor(
+    private readonly ticketsService: TicketsService,
+    private readonly ticketsLogService: TicketLogsService,
+  ) {}
 
   @Get()
   @UseGuards(ITGuard)
@@ -34,6 +40,18 @@ export class TicketsController {
   @Roles('IT_HELP')
   getTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.ticketsService.findById(id);
+  }
+
+  @Get(':id/logs')
+  @UseGuards(ITGuard)
+  @Roles('IT_HELP')
+  getTicketLogReportById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query('type', new ParseEnumPipe(TicketLogType, { optional: true }))
+    type?: TicketLogType,
+  ) {
+    this.ticketsService.findById(id);
+    return this.ticketsLogService.listByTicketId(id, type);
   }
 
   @Post()
@@ -58,5 +76,7 @@ export class TicketsController {
   @Delete(':id')
   @UseGuards(ITGuard)
   @Roles('IT_HELP')
-  deleteTicket() {}
+  deleteTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.ticketsService.deleteTicketById(id);
+  }
 }
