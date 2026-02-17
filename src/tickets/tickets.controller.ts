@@ -7,12 +7,16 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ITGuard } from 'src/common/it/it.guard';
+import { TicketStatus } from './tickets.types';
+import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
+import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 
 @Controller('tickets')
 export class TicketsController {
@@ -39,10 +43,17 @@ export class TicketsController {
     return this.ticketsService.create(dto);
   }
 
-  @Patch(':id')
+  @Patch(':id/status')
   @UseGuards(ITGuard)
   @Roles('IT_HELP')
-  updateTicket() {}
+  updateTicketStatus(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateTicketStatusDto,
+  ) {
+    const by = req.user.email;
+    return this.ticketsService.updateStatus({ id, dto, by });
+  }
 
   @Delete(':id')
   @UseGuards(ITGuard)
