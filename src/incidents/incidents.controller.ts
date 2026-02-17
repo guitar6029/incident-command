@@ -42,8 +42,7 @@ export class IncidentsController {
 
   @Get(':id/acknowledgments')
   getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
-    this.incidentsService.getIncidentById(id);
-    return this.incidentsLogService.listByIdAcknowledged(id);
+    return this.incidentsService.getlistByIdAcknowledged(id);
   }
 
   @Get()
@@ -75,8 +74,7 @@ export class IncidentsController {
     @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
     type?: IncidentLogType,
   ) {
-    this.incidentsService.getIncidentById(id);
-    return this.incidentsLogService.listByIncidentId(id, type);
+    return this.incidentsService.getLogs(id, type);
   }
 
   @Post()
