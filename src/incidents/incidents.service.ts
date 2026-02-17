@@ -10,7 +10,10 @@ import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
 import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
 import { IncidentAcknowledgeService } from 'src/incident-acknowledge/incident-acknowledge.service';
 import { AcknoledgeIncidentDto } from 'src/incident-acknowledge/dto/acknowledge-incident.dto';
-import { IncidentLogType } from 'src/incident-logs/incident-logs.types';
+import {
+  IncidentLog,
+  IncidentLogType,
+} from 'src/incident-logs/incident-logs.types';
 
 @Injectable()
 export class IncidentsService {
@@ -153,12 +156,12 @@ export class IncidentsService {
     return this.incidents[foundReportIndex];
   }
 
-  getlistByIdAcknowledged(id: string) {
+  getAcknowledgments(id: string) {
     this.getIncidentById(id);
     return this.incidentLogsService.listByIdAcknowledged(id);
   }
 
-  getLogs(id: string, type?: IncidentLogType) {
+  getLogs(id: string, type?: IncidentLogType): IncidentLog[] {
     this.getIncidentById(id);
     return this.incidentLogsService.listByIncidentId(id, type);
   }

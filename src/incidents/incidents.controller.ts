@@ -42,7 +42,7 @@ export class IncidentsController {
 
   @Get(':id/acknowledgments')
   getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.incidentsService.getlistByIdAcknowledged(id);
+    return this.incidentsService.getLogs(id, IncidentLogType.ACKNOWLEDGED);
   }
 
   @Get()
