@@ -14,7 +14,6 @@ import {
 } from '@nestjs/common';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentsService } from './incidents.service';
-import { IncidentCase } from './incidents.types';
 import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
 import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
 import { RequestTimingInterceptor } from 'src/common/request-timing/request-timing.interceptor';
@@ -26,6 +25,7 @@ import {
   IncidentLogType,
 } from 'src/incident-logs/incident-logs.types';
 import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
+import { Incident } from 'generated/prisma/client';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)
@@ -35,64 +35,68 @@ export class IncidentsController {
     private readonly incidentsLogService: IncidentLogsService,
   ) {}
 
-  @Get('acknowledgments')
-  getAcknowledgedLogs(): IncidentLog[] {
-    return this.incidentsLogService.listByAcknowledged();
-  }
-
-  @Get(':id/acknowledgments')
-  getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.incidentsService.getLogs(id, IncidentLogType.ACKNOWLEDGED);
-  }
-
+  /** INCIDENTS */
   @Get()
-  getIncidentReports(): IncidentCase[] {
+  async getIncidentReports(): Promise<Incident[]> {
     return this.incidentsService.getIncidents();
   }
 
-  @Patch(':id/acknowledgments')
-  @UseGuards(OncallGuard)
-  @Roles('ONCALL')
-  acknowledgeIncident(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: AcknoledgeIncidentDto,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    const by = req.user.email;
-    // the incidentService updates the acknowledgments properties
-    return this.incidentsService.acknowledgeIncident(id, dto, by);
-  }
-
   @Get(':id')
-  getIncidentById(@Param('id', new ParseUUIDPipe()) id: string) {
+  async getIncidentById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<Incident> {
     return this.incidentsService.getIncidentById(id);
   }
 
-  @Get(':id/logs')
-  getIncidentLogReportById(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
-    type?: IncidentLogType,
-  ) {
-    return this.incidentsService.getLogs(id, type);
-  }
-
   @Post()
-  @UseGuards(OncallGuard)
-  @Roles('ONCALL')
+  //@UseGuards(OncallGuard)
+  //@Roles('ONCALL')
   createIncidentReport(@Body() dto: CreateIncidentDto) {
     return this.incidentsService.create(dto);
   }
 
-  @Patch(':id/status')
-  @UseGuards(OncallGuard)
-  @Roles('ONCALL')
-  updateIncidentReportStatus(
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dtoPatch: UpdateIncidentStatusDto,
-    @Req() req: AuthenticatedRequest,
-  ): IncidentCase {
-    const by = req.user.email;
-    return this.incidentsService.updateIncidentStatus(id, dtoPatch, by);
-  }
+  /** ACKNOWLEDGEMENTS */
+  // @Get('acknowledgments')
+  // getAcknowledgedLogs(): IncidentLog[] {
+  //   return this.incidentsLogService.listByAcknowledged();
+  // }
+
+  // @Get(':id/acknowledgments')
+  // getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
+  //   return this.incidentsService.getLogs(id, IncidentLogType.ACKNOWLEDGED);
+  // }
+
+  // @Patch(':id/acknowledgments')
+  // @UseGuards(OncallGuard)
+  // @Roles('ONCALL')
+  // acknowledgeIncident(
+  //   @Param('id', new ParseUUIDPipe()) id: string,
+  //   @Body() dto: AcknoledgeIncidentDto,
+  //   @Req() req: AuthenticatedRequest,
+  // ) {
+  //   const by = req.user.email;
+  //   // the incidentService updates the acknowledgments properties
+  //   return this.incidentsService.acknowledgeIncident(id, dto, by);
+  // }
+
+  // @Get(':id/logs')
+  // getIncidentLogReportById(
+  //   @Param('id', new ParseUUIDPipe()) id: string,
+  //   @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
+  //   type?: IncidentLogType,
+  // ) {
+  //   return this.incidentsService.getLogs(id, type);
+  // }
+
+  // @Patch(':id/status')
+  // @UseGuards(OncallGuard)
+  // @Roles('ONCALL')
+  // updateIncidentReportStatus(
+  //   @Param('id', new ParseUUIDPipe()) id: string,
+  //   @Body() dtoPatch: UpdateIncidentStatusDto,
+  //   @Req() req: AuthenticatedRequest,
+  // ): IncidentCase {
+  //   const by = req.user.email;
+  //   return this.incidentsService.updateIncidentStatus(id, dtoPatch, by);
+  // }
 }

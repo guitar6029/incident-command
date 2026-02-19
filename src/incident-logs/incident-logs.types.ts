@@ -1,4 +1,4 @@
-import { IncidentStatus } from 'src/incidents/incidents.types';
+import { IncidentStatus } from 'generated/prisma/enums';
 
 export enum IncidentLogType {
   'STATUS_CHANGED' = 'STATUS_CHANGED',

@@ -1,4 +1,4 @@
-import { Severity } from '../incidents.types';
+import { Severity } from 'generated/prisma/client';
 import { IsString, IsEnum, IsOptional, IsEmail } from 'class-validator';
 
 export class CreateIncidentDto {

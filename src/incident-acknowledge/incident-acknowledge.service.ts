@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AcknoledgeIncidentDto } from './dto/acknowledge-incident.dto';
-import { IncidentStatus } from 'src/incidents/incidents.types';
+import { IncidentStatus } from 'generated/prisma/enums';
 
 @Injectable()
 export class IncidentAcknowledgeService {

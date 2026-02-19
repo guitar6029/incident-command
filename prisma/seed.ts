@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { prisma } from '../lib/prisma'; // adjust path if needed
+import { prisma } from '../src/lib/prisma'; // adjust path if needed
 import { EmployeeRole, EmployeeLevel } from '../generated/prisma/client';
 
 const INITIAL_EMPLOYEE_COUNT = 20;
