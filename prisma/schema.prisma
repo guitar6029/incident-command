@@ -37,4 +37,81 @@ model Employee {
   onCall    Boolean       @default(false)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  acknowledgedIncidents Incident[] @relation("IncidentAcknowledgedBy")
+  assignedTickets       Ticket[]   @relation("TicketAssignedTo")
+  updatedTickets        Ticket[]   @relation("TicketUpdatedBy")
 }
+
+/**
+ * Ticket  **
+ */
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  REOPENED
+  CANCELLED
+}
+
+model Ticket {
+  id    String @id @default(uuid())
+  title String
+
+  incidentId String?
+  incident   Incident? @relation(fields: [incidentId], references: [id])
+
+  description      String @db.VarChar(2000)
+  requestedByEmail String
+
+  assignedToEmployeeId String?
+  assignedToEmployee   Employee? @relation("TicketAssignedTo", fields: [assignedToEmployeeId], references: [id])
+
+  updatedByEmployeeId String?
+  updatedByEmployee   Employee? @relation("TicketUpdatedBy", fields: [updatedByEmployeeId], references: [id])
+
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+/**
+ * Ticket  **
+ */
+
+/**
+ * Incident *
+ */
+enum Severity {
+  SEV1
+  SEV2
+  SEV3
+}
+
+enum IncidentStatus {
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+  REOPENED
+  OPEN
+}
+
+model Incident {
+  id                       String         @id @default(uuid())
+  title                    String         @db.VarChar(250)
+  severity                 Severity
+  reportedBy               String
+  summary                  String?
+  status                   IncidentStatus @default(OPEN)
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  acknowledgedByEmployeeId String?
+  acknowledgedByEmployee   Employee?      @relation("IncidentAcknowledgedBy", fields: [acknowledgedByEmployeeId], references: [id])
+  acknowledgedAt           DateTime?
+  acknowledgedNote         String?        @db.VarChar(2000)
+  tickets                  Ticket[]
+}
+
+/**
+ * Incident *
+ */
