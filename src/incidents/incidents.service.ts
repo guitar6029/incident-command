@@ -13,7 +13,7 @@ import {
   IncidentLogType,
 } from 'src/incident-logs/incident-logs.types';
 import { prisma } from 'src/lib/prisma';
-import { Incident, IncidentStatus } from 'generated/prisma/client';
+import { Employee, Incident, IncidentStatus } from 'generated/prisma/client';
 
 @Injectable()
 export class IncidentsService {
@@ -63,55 +63,62 @@ export class IncidentsService {
     });
   }
 
-  // acknowledgeIncident(id: string, dto: AcknoledgeIncidentDto, by: string) {
-  //   // check if incident exists
-  //   const incidentIndex = this.getIndexOrThrow(id);
-  //   // check incident status
-  //   const incident = this.incidents[incidentIndex];
+  async acknowledgeIncident(
+    id: string,
+    dto: AcknoledgeIncidentDto,
+    userId: string,
+  ) {
+    // check if incident exists
+    const incident = await this.incidentOrThrow(id);
 
-  //   // check if incident was already acknowledged
-  //   // check if acknowlegeAt is not null
-  //   const alreadyAcknowledged = incident.acknowledgedAt !== null;
-  //   if (alreadyAcknowledged) {
-  //     throw new BadRequestException('Incident has been already acknowledged');
-  //   }
-  //   // check incident status
-  //   const incidentStatus = incident.status;
+    // check if incident was already acknowledged
+    const alreadyAcknowledged = incident.acknowledgedAt !== null;
+    if (alreadyAcknowledged) {
+      throw new BadRequestException('Incident has been already acknowledged');
+    }
+    // check incident status
+    const incidentStatus = incident.status;
 
-  //   // returns true or false
-  //   const isAllowedAcknowledge =
-  //     this.incidentAcknowledge.allowedAcknowledgeCheck(incidentStatus);
+    // returns true or false
+    const isAllowedAcknowledge =
+      this.incidentAcknowledge.allowedAcknowledgeCheck(incidentStatus);
 
-  //   if (!isAllowedAcknowledge) {
-  //     throw new BadRequestException(
-  //       `Acknoledgement of the incident is not allowed with current status : ${incidentStatus}`,
-  //     );
-  //   }
-  //   // returns
-  //   // acknowledgeBy, acknowledgeAt, and optional acknowledgedNote
-  //   const ackUpdatedValues = this.incidentAcknowledge.acknowledge(dto);
+    if (!isAllowedAcknowledge) {
+      throw new BadRequestException(
+        `Acknoledgement of the incident is not allowed with current status : ${incidentStatus}`,
+      );
+    }
 
-  //   // now update the record
-  //   this.incidents[incidentIndex].acknowledgedBy = by;
-  //   this.incidents[incidentIndex].acknowledgedAt =
-  //     ackUpdatedValues.acknowledgedAt;
-  //   this.incidents[incidentIndex].acknowledgedNote =
-  //     ackUpdatedValues.acknowledgedNote ?? null;
+    const employee = await this.employeeOrThrow(userId);
+    //  returns acknowledgeBy, acknowledgeAt, and optional acknowledgedNote
+    const ackUpdatedValues = this.incidentAcknowledge.acknowledge(dto);
 
-  //   const incidentForAckLog = {
-  //     incidentId: incident.id,
-  //     by,
-  //     fromStatus: incident.status,
-  //     toStatus: incident.status,
-  //     note: ackUpdatedValues.acknowledgedNote ?? undefined,
-  //   };
+    // now update the record
+    const updatedIncident = await prisma.incident.update({
+      where: { id },
+      data: {
+        acknowledgedByEmployeeId: employee.id,
+        acknowledgedAt: ackUpdatedValues.acknowledgedAt,
+        acknowledgedNote: ackUpdatedValues.acknowledgedNote ?? null,
+      },
+    });
 
-  //   this.updateIncidentTimestamp(incidentIndex);
-  //   // log the ack log
-  //   this.incidentLogsService.appendAcknowledgeLog(incidentForAckLog);
+    return updatedIncident;
 
-  //   return this.incidents[incidentIndex];
-  // }
+    // const incidentForAckLog = {
+    //   incidentId: incident.id,
+    //   by,
+    //   fromStatus: incident.status,
+    //   toStatus: incident.status,
+    //   note: ackUpdatedValues.acknowledgedNote ?? undefined,
+    // };
+
+    // this.updateIncidentTimestamp(incidentIndex);
+    // // log the ack log
+    // this.incidentLogsService.appendAcknowledgeLog(incidentForAckLog);
+
+    // return this.incidents[incidentIndex];
+  }
 
   // updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto, by: string) {
   //   const foundReportIndex = this.getIndexOrThrow(id);
@@ -154,6 +161,25 @@ export class IncidentsService {
   // }
 
   async getIncidentById(id: string): Promise<Incident> {
+    const incident = await this.incidentOrThrow(id);
+    return incident;
+  }
+
+  private async employeeOrThrow(userId: string): Promise<Employee> {
+    const employee = await prisma.employee.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(`Employee with email ${userId} not found`);
+    }
+
+    return employee;
+  }
+
+  private async incidentOrThrow(id: string): Promise<Incident> {
     const incident = await prisma.incident.findUnique({
       where: { id },
     });

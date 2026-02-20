@@ -26,6 +26,8 @@ import {
 } from 'src/incident-logs/incident-logs.types';
 import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 import { Incident } from 'generated/prisma/client';
+import { AuthGuard } from 'src/common/auth/auth.guard';
+import { RolesGuard } from 'src/common/roles/roles.guard';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)
@@ -55,9 +57,9 @@ export class IncidentsController {
     return this.incidentsService.create(dto);
   }
 
-  /** ACKNOWLEDGEMENTS */
+  // /** ACKNOWLEDGEMENTS */
   // @Get('acknowledgments')
-  // getAcknowledgedLogs(): IncidentLog[] {
+  // async getAcknowledgedLogs(): IncidentLog[] {
   //   return this.incidentsLogService.listByAcknowledged();
   // }
 
@@ -66,18 +68,18 @@ export class IncidentsController {
   //   return this.incidentsService.getLogs(id, IncidentLogType.ACKNOWLEDGED);
   // }
 
-  // @Patch(':id/acknowledgments')
-  // @UseGuards(OncallGuard)
-  // @Roles('ONCALL')
-  // acknowledgeIncident(
-  //   @Param('id', new ParseUUIDPipe()) id: string,
-  //   @Body() dto: AcknoledgeIncidentDto,
-  //   @Req() req: AuthenticatedRequest,
-  // ) {
-  //   const by = req.user.email;
-  //   // the incidentService updates the acknowledgments properties
-  //   return this.incidentsService.acknowledgeIncident(id, dto, by);
-  // }
+  @Patch(':id/acknowledgments')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('IT_HELP')
+  async acknowledgeIncident(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: AcknoledgeIncidentDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Incident> {
+    const userId = req.user.id;
+    // the incidentService updates the acknowledgments properties
+    return this.incidentsService.acknowledgeIncident(id, dto, userId);
+  }
 
   // @Get(':id/logs')
   // getIncidentLogReportById(

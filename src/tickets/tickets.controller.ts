@@ -15,13 +15,14 @@ import {
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { ITGuard } from 'src/common/it/it.guard';
 import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { TicketLogsService } from 'src/ticket-logs/ticket-logs.service';
 import { TicketLogType } from 'src/ticket-logs/ticket-logs.types';
 import { AssignTicketDto } from './dto/assign-ticket.dto';
 import { TicketAssignmentService } from 'src/ticket-assignment/ticket-assignment.service';
+import { AuthGuard } from 'src/common/auth/auth.guard';
+import { RolesGuard } from 'src/common/roles/roles.guard';
 
 @Controller('tickets')
 export class TicketsController {
@@ -32,21 +33,21 @@ export class TicketsController {
   ) {}
 
   @Get()
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   getTickets() {
     return this.ticketService.findAll();
   }
 
   @Get(':id')
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   getTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.ticketService.findById(id);
   }
 
   @Get(':id/logs')
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   getTicketLogReportById(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -58,14 +59,14 @@ export class TicketsController {
   }
 
   @Post()
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   createTicket(@Body() dto: CreateTicketDto) {
     return this.ticketService.create(dto);
   }
 
   @Post(':id/assign')
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   assignTicket(
     @Param('id', new ParseUUIDPipe()) ticketId: string,
@@ -75,7 +76,7 @@ export class TicketsController {
   }
 
   @Patch(':id/status')
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   updateTicketStatus(
     @Req() req: AuthenticatedRequest,
@@ -87,7 +88,7 @@ export class TicketsController {
   }
 
   @Delete(':id')
-  @UseGuards(ITGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('IT_HELP')
   deleteTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.ticketService.deleteTicketById(id);
