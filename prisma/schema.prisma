@@ -38,9 +38,10 @@ model Employee {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  acknowledgedIncidents Incident[] @relation("IncidentAcknowledgedBy")
-  assignedTickets       Ticket[]   @relation("TicketAssignedTo")
-  updatedTickets        Ticket[]   @relation("TicketUpdatedBy")
+  acknowledgedIncidents Incident[]    @relation("IncidentAcknowledgedBy")
+  assignedTickets       Ticket[]      @relation("TicketAssignedTo")
+  updatedTickets        Ticket[]      @relation("TicketUpdatedBy")
+  incidentLogs          IncidentLog[]
 }
 
 /**
@@ -110,8 +111,44 @@ model Incident {
   acknowledgedAt           DateTime?
   acknowledgedNote         String?        @db.VarChar(2000)
   tickets                  Ticket[]
+  incidentLogs             IncidentLog[]
 }
 
 /**
  * Incident *
+ */
+
+/**
+ * Incident Log
+ */
+
+enum IncidentLogType {
+  STATUS_CHANGED
+  ACKNOWLEDGED
+}
+
+model IncidentLog {
+  id String @id @default(uuid())
+
+  incidentId String
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  eventType IncidentLogType
+
+  byEmployeeId String
+  byEmployee   Employee @relation(fields: [byEmployeeId], references: [id])
+
+  fromStatus IncidentStatus
+  toStatus   IncidentStatus
+
+  note String? @db.VarChar(2000)
+
+  createdAt DateTime @default(now())
+
+  @@index([incidentId])
+  @@index([createdAt])
+}
+
+/**
+ * Incident Log
  */
