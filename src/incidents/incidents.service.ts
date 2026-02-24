@@ -51,9 +51,7 @@ export class IncidentsService {
     return incident;
   }
 
-  addToIncidents(dto: Incident) {
-    //this.incidents.push(dto);
-  }
+  addToIncidents(dto: Incident) {}
 
   async getIncidents() {
     return prisma.incident.findMany({
@@ -93,31 +91,36 @@ export class IncidentsService {
     //  returns acknowledgeBy, acknowledgeAt, and optional acknowledgedNote
     const ackUpdatedValues = this.incidentAcknowledge.acknowledge(dto);
 
-    // now update the record
-    const updatedIncident = await prisma.incident.update({
-      where: { id },
-      data: {
-        acknowledgedByEmployeeId: employee.id,
-        acknowledgedAt: ackUpdatedValues.acknowledgedAt,
-        acknowledgedNote: ackUpdatedValues.acknowledgedNote ?? null,
-      },
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.incident.updateMany({
+        where: { id, acknowledgedAt: null },
+        data: {
+          acknowledgedByEmployeeId: employee.id,
+          acknowledgedAt: ackUpdatedValues.acknowledgedAt,
+          acknowledgedNote: ackUpdatedValues.acknowledgedNote ?? null,
+        },
+      });
+
+      if (updated.count === 0) {
+        throw new BadRequestException('Incident already acknowledged');
+      }
+
+      const updatedIncident = await tx.incident.findUniqueOrThrow({
+        where: { id },
+      });
+
+      await tx.incidentLog.create({
+        data: {
+          incidentId: incident.id,
+          eventType: 'ACKNOWLEDGED',
+          byEmployeeId: employee.id,
+          fromStatus: incident.status,
+          toStatus: incident.status,
+          note: ackUpdatedValues.acknowledgedNote ?? null,
+        },
+      });
+      return updatedIncident;
     });
-
-    return updatedIncident;
-
-    // const incidentForAckLog = {
-    //   incidentId: incident.id,
-    //   by,
-    //   fromStatus: incident.status,
-    //   toStatus: incident.status,
-    //   note: ackUpdatedValues.acknowledgedNote ?? undefined,
-    // };
-
-    // this.updateIncidentTimestamp(incidentIndex);
-    // // log the ack log
-    // this.incidentLogsService.appendAcknowledgeLog(incidentForAckLog);
-
-    // return this.incidents[incidentIndex];
   }
 
   // updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto, by: string) {
