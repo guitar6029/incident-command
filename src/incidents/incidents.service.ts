@@ -8,10 +8,7 @@ import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
 import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
 import { IncidentAcknowledgeService } from 'src/incident-acknowledge/incident-acknowledge.service';
 import { AcknoledgeIncidentDto } from 'src/incident-acknowledge/dto/acknowledge-incident.dto';
-import {
-  IncidentLog,
-  IncidentLogType,
-} from 'src/incident-logs/incident-logs.types';
+import { IncidentLog, IncidentLogType } from 'generated/prisma/client';
 import { prisma } from 'src/lib/prisma';
 import { Employee, Incident, IncidentStatus } from 'generated/prisma/client';
 
@@ -181,11 +178,6 @@ export class IncidentsService {
       return updatedIncident;
     });
   }
-
-  // getAcknowledgments(id: string) {
-  //   this.getIncidentById(id);
-  //   return this.incidentLogsService.listByIdAcknowledged(id);
-  // }
 
   async getLogs(id: string, type?: IncidentLogType): Promise<IncidentLog[]> {
     await this.getIncidentById(id);

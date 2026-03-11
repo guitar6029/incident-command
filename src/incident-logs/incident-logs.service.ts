@@ -1,96 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import {
-  IncidentLog,
-  IncidentLogAppend,
-  IncidentLogType,
-} from './incident-logs.types';
-import { randomUUID } from 'crypto';
+import { prisma } from 'src/lib/prisma';
+import { IncidentLog, IncidentLogType } from 'generated/prisma/client';
 
 @Injectable()
 export class IncidentLogsService {
-  private incidentLogs: IncidentLog[] = [];
-
-  appendStatusChange({
-    incidentId,
-    fromStatus,
-    toStatus,
-    by,
-    note,
-  }: IncidentLogAppend) {
-    const id = randomUUID();
-    const temp: IncidentLog = {
-      id,
-      incidentId,
-      fromStatus,
-      eventType: IncidentLogType.STATUS_CHANGED,
-      toStatus,
-      at: new Date().toISOString(),
-      by,
-    };
-
-    if (note) {
-      temp.note = note;
-    }
-
-    this.incidentLogs.push(temp);
-
-    return temp;
+  async listByAcknowledged(): Promise<IncidentLog[]> {
+    return prisma.incidentLog.findMany({
+      where: {
+        eventType: IncidentLogType.ACKNOWLEDGED,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
-  appendAcknowledgeLog({
-    incidentId,
-    by,
-    fromStatus,
-    toStatus,
-    note,
-  }: IncidentLogAppend) {
-    const id = randomUUID();
-    const temp: IncidentLog = {
-      id,
-      incidentId,
-      fromStatus,
-      eventType: IncidentLogType.ACKNOWLEDGED,
-      toStatus,
-      at: new Date().toISOString(),
-      by,
-    };
-
-    if (note) {
-      temp.note = note;
-    }
-
-    this.incidentLogs.push(temp);
-
-    return temp;
+  async listByIdAcknowledged(id: string): Promise<IncidentLog[]> {
+    return prisma.incidentLog.findMany({
+      where: {
+        incidentId: id,
+        eventType: IncidentLogType.ACKNOWLEDGED,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
-  listByAcknowledged(): IncidentLog[] {
-    return this.incidentLogs.filter(
-      (incidentLog: IncidentLog) =>
-        incidentLog.eventType === IncidentLogType.ACKNOWLEDGED,
-    );
-  }
-
-  listByIdAcknowledged(id: string): IncidentLog[] {
-    return this.incidentLogs.filter(
-      (incidentLog: IncidentLog) =>
-        incidentLog.incidentId === id &&
-        incidentLog.eventType === IncidentLogType.ACKNOWLEDGED,
-    );
-  }
-
-  listByIncidentId(
+  async listByIncidentId(
     incidentId: string,
     incidentType?: IncidentLogType,
-  ): IncidentLog[] {
-    return this.incidentLogs.filter((incidentLog: IncidentLog) => {
-      if (incidentType) {
-        return (
-          incidentLog.incidentId === incidentId &&
-          incidentLog.eventType === incidentType
-        );
-      }
-      return incidentLog.incidentId === incidentId;
+  ): Promise<IncidentLog[]> {
+    return prisma.incidentLog.findMany({
+      where: {
+        incidentId,
+        ...(incidentType ? { eventType: incidentType } : {}),
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 }

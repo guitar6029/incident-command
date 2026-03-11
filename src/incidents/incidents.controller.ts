@@ -20,10 +20,8 @@ import { RequestTimingInterceptor } from 'src/common/request-timing/request-timi
 import { OncallGuard } from 'src/common/oncall/oncall.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
-import {
-  IncidentLog,
-  IncidentLogType,
-} from 'src/incident-logs/incident-logs.types';
+
+import { IncidentLog, IncidentLogType } from 'generated/prisma/client';
 import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
 import { Incident } from 'generated/prisma/client';
 import { AuthGuard } from 'src/common/auth/auth.guard';
@@ -51,22 +49,22 @@ export class IncidentsController {
   }
 
   @Post()
-  //@UseGuards(OncallGuard)
-  //@Roles('ONCALL')
   createIncidentReport(@Body() dto: CreateIncidentDto) {
     return this.incidentsService.create(dto);
   }
 
-  // /** ACKNOWLEDGEMENTS */
-  // @Get('acknowledgments')
-  // async getAcknowledgedLogs(): IncidentLog[] {
-  //   return this.incidentsLogService.listByAcknowledged();
-  // }
+  /** ACKNOWLEDGEMENTS */
+  @Get('acknowledgments')
+  async getAcknowledgedLogs(): Promise<IncidentLog[]> {
+    return this.incidentsLogService.listByAcknowledged();
+  }
 
-  // @Get(':id/acknowledgments')
-  // getAcknowledgedById(@Param('id', new ParseUUIDPipe()) id: string) {
-  //   return this.incidentsService.getLogs(id, IncidentLogType.ACKNOWLEDGED);
-  // }
+  @Get(':id/acknowledgments')
+  async getAcknowledgedById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<IncidentLog[]> {
+    return this.incidentsService.getLogs(id, IncidentLogType.ACKNOWLEDGED);
+  }
 
   @Patch(':id/acknowledgments')
   @UseGuards(AuthGuard, RolesGuard)
@@ -82,9 +80,9 @@ export class IncidentsController {
   }
 
   @Get(':id/logs')
+  @UseGuards(AuthGuard)
   async getIncidentLogReportById(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Req() req: AuthenticatedRequest,
     @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
     type?: IncidentLogType,
   ): Promise<IncidentLog[]> {
