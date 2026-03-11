@@ -1,8 +1,0 @@
-import { Module } from '@nestjs/common';
-import { TicketLogsService } from './ticket-logs.service';
-
-@Module({
-  providers: [TicketLogsService],
-  exports: [TicketLogsService],
-})
-export class TicketLogsModule {}

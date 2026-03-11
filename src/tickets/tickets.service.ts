@@ -3,15 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { Ticket, TicketStatus } from './tickets.types';
+import { Employee, Ticket, TicketStatus } from 'generated/prisma/client';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
-import { TicketLogsService } from 'src/ticket-logs/ticket-logs.service';
+import { prisma } from 'src/lib/prisma';
+
 @Injectable()
 export class TicketsService {
-  // add the Ticket type later
-  private tickets: Ticket[] = [];
   private readonly transitions: Record<TicketStatus, TicketStatus[]> = {
     [TicketStatus.OPEN]: [TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED],
 
@@ -24,62 +22,46 @@ export class TicketsService {
     [TicketStatus.CANCELLED]: [],
   };
 
-  constructor(private readonly ticketsLogService: TicketLogsService) {}
-
-  create(dto: CreateTicketDto): Ticket {
-    const id = randomUUID();
-    const now = new Date().toISOString();
-    const payload: Ticket = {
-      id,
-      title: dto.title,
-      incidentId: dto.incidentId ?? null,
-      description: dto.description,
-      requestedBy: dto.requestedBy,
-      updatedBy: dto.requestedBy,
-      createdAt: now,
-      updatedAt: now,
-      status: TicketStatus.OPEN,
-    };
-
-    //push to tickets
-    this.tickets.push(payload);
-    return payload;
+  async create(userId: string, dto: CreateTicketDto): Promise<Ticket> {
+    return prisma.ticket.create({
+      data: {
+        title: dto.title,
+        incidentId: dto.incidentId ?? null,
+        description: dto.description,
+        requestedByEmail: dto.requestedByEmail,
+        updatedByEmployeeId: userId,
+        status: TicketStatus.OPEN,
+      },
+    });
+  }
+  async getTicketById(id: string): Promise<Ticket> {
+    const ticket = await this.ticketOrThrow(id);
+    return ticket;
   }
 
-  findAll(): Ticket[] {
-    return this.tickets;
+  async deleteTicketById(id: string): Promise<Ticket> {
+    return prisma.ticket.delete({
+      where: { id },
+    });
   }
 
-  deleteTicketById(id: string): Ticket {
-    const idx = this.getIndexOrThrow(id);
-    const [deleted] = this.tickets.splice(idx, 1);
-    return deleted;
+  async findAll(): Promise<Ticket[]> {
+    return prisma.ticket.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
   }
 
-  findIndexById(id: string): number {
-    const idx = this.getIndexOrThrow(id);
-    return idx;
-  }
-
-  findById(id: string): Ticket {
-    const idx = this.getIndexOrThrow(id);
-    return this.tickets[idx];
-  }
-
-  updateStatus({
+  async updateStatus({
     id,
     dto,
-    by,
+    userId,
   }: {
     id: string;
     dto: UpdateTicketStatusDto;
-    by: string;
-  }): Ticket {
-    //check if id exists
-    const index = this.getIndexOrThrow(id);
-
-    //get ticket from tickets[index]
-    const ticket = this.tickets[index];
+    userId: string;
+  }): Promise<Ticket> {
+    const ticket = await this.ticketOrThrow(id);
 
     // check if allowed to change
     const allowedStatusChange = this.checkStatusChangeAllowed(
@@ -94,50 +76,60 @@ export class TicketsService {
     }
 
     const fromStatus = ticket.status;
-    //helepr chane status
-    this.updatedTicketStatus(index, dto.status);
-    // helper updateAt and updatedBy
-    this.updateTicketAt(index);
-    this.updateTicketBy(index, by);
 
-    //log heler later
-    this.ticketsLogService.appendStatusChange({
-      ticketId: id,
-      fromStatus,
-      toStatus: dto.status,
-      by,
-      note: dto.note,
+    const employee = await this.employeeOrThrow(userId);
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.ticket.updateMany({
+        where: {
+          id,
+          status: ticket.status,
+        },
+        data: {
+          status: dto.status,
+          updatedByEmployeeId: employee.id,
+          updatedAt: new Date(),
+        },
+      });
+
+      if (updated.count === 0) {
+        throw new BadRequestException(
+          'Ticket status was modified by another request',
+        );
+      }
+
+      const updatedTicket = await tx.ticket.findUniqueOrThrow({
+        where: { id },
+      });
+
+      // update the ticket log todo
+      await tx.ticketLog.create({
+        data: {
+          ticketId: id,
+          eventType: 'STATUS_CHANGED',
+          byEmployeeId: employee.id,
+          fromStatus: fromStatus,
+          toStatus: dto.status,
+          note: dto.note ?? null,
+        },
+      });
+
+      return updatedTicket;
+    });
+  }
+
+  private async employeeOrThrow(userId: string): Promise<Employee> {
+    const employee = await prisma.employee.findUnique({
+      where: {
+        id: userId,
+      },
     });
 
-    return this.tickets[index];
-  }
-
-  getTicketById(id: string) {
-    const idx = this.getIndexOrThrow(id);
-    return this.tickets[idx];
-  }
-
-  private updateTicketAt(index: number) {
-    const now = new Date().toISOString();
-    this.tickets[index].updatedAt = now;
-  }
-
-  private updateTicketBy(index: number, by: string) {
-    this.tickets[index].updatedBy = by;
-  }
-
-  private getIndexOrThrow(id: string) {
-    const idx = this.tickets.findIndex((ticket: Ticket) => ticket.id === id);
-
-    if (idx === -1) {
-      throw new NotFoundException(`Ticket with id ${id} not found`);
+    if (!employee) {
+      throw new NotFoundException(`Employee with email ${userId} not found`);
     }
 
-    return idx;
-  }
-
-  private updatedTicketStatus(idx: number, toStatus: TicketStatus) {
-    this.tickets[idx].status = toStatus;
+    return employee;
   }
 
   private checkStatusChangeAllowed(
@@ -145,5 +137,15 @@ export class TicketsService {
     toStatus: TicketStatus,
   ) {
     return this.transitions[fromStatus].includes(toStatus);
+  }
+
+  private async ticketOrThrow(id: string): Promise<Ticket> {
+    const ticket = await prisma.ticket.findUnique({
+      where: { id },
+    });
+    if (!ticket) {
+      throw new NotFoundException(`Ticket with id ${id} not found`);
+    }
+    return ticket;
   }
 }

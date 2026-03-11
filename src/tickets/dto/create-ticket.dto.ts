@@ -20,7 +20,7 @@ export class CreateTicketDto {
 
   @IsEmail()
   @IsNotEmpty()
-  requestedBy: string;
+  requestedByEmail: string;
 
   @IsOptional()
   @IsUUID()

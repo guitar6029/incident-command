@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { TicketStatus } from '../tickets.types';
+import { TicketStatus } from 'generated/prisma/client';
 
 export class UpdateTicketStatusDto {
   @IsEnum(TicketStatus)

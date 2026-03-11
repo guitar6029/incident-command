@@ -8,12 +8,21 @@ import { HealthModule } from './health/health.module';
 import { IncidentLogsModule } from './incident-logs/incident-logs.module';
 import { IncidentAcknowledgeModule } from './incident-acknowledge/incident-acknowledge.module';
 import { TicketsModule } from './tickets/tickets.module';
-import { TicketLogsModule } from './ticket-logs/ticket-logs.module';
 import { TicketAssignmentModule } from './ticket-assignment/ticket-assignment.module';
 import { EmployeesModule } from './employees/employees.module';
 
 @Module({
-  imports: [IncidentsModule, UsersModule, ActionsModule, HealthModule, IncidentLogsModule, IncidentAcknowledgeModule, TicketsModule, TicketLogsModule, TicketAssignmentModule, EmployeesModule],
+  imports: [
+    IncidentsModule,
+    UsersModule,
+    ActionsModule,
+    HealthModule,
+    IncidentLogsModule,
+    IncidentAcknowledgeModule,
+    TicketsModule,
+    TicketAssignmentModule,
+    EmployeesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
