@@ -123,35 +123,64 @@ export class IncidentsService {
     });
   }
 
-  // updateIncidentStatus(id: string, dto: UpdateIncidentStatusDto, by: string) {
-  //   const foundReportIndex = this.getIndexOrThrow(id);
+  async updateIncidentStatus(
+    id: string,
+    dto: UpdateIncidentStatusDto,
+    userId: string,
+  ) {
+    // check if incident exists
+    const incident = await this.incidentOrThrow(id);
 
-  //   //else if found
-  //   const foundReport = this.getIncidentReportByIndex(foundReportIndex);
-  //   // check if the desired status can be modified
-  //   const allowedChange = this.checkStatusChangeAllowed(
-  //     foundReport.status,
-  //     dto.status,
-  //   );
+    // check incident status
+    const incidentStatus = incident.status;
 
-  //   if (!allowedChange) {
-  //     throw new BadRequestException(
-  //       `Change of status is not allowed from ${foundReport.status} to ${dto.status}`,
-  //     );
-  //   }
-  //   const fromStatus = foundReport.status;
+    const isAllowedToUpdateStatus = this.checkStatusChangeAllowed(
+      incidentStatus,
+      dto.status,
+    );
 
-  //   // change status
-  //   this.updatedIncidentStatus(foundReportIndex, dto.status);
+    if (!isAllowedToUpdateStatus) {
+      throw new BadRequestException(
+        `Change of status is not allowed from ${incident.status} to ${dto.status}`,
+      );
+    }
 
-  //   // update the updateAt
-  //   this.updateIncidentTimestamp(foundReportIndex);
+    const employee = await this.employeeOrThrow(userId);
 
-  //   //log helper
-  //   this.logStatusChange(foundReport.id, fromStatus, dto.status, dto, by);
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.incident.updateMany({
+        where: {
+          id,
+          status: incident.status,
+        },
+        data: {
+          status: dto.status,
+        },
+      });
 
-  //   return this.incidents[foundReportIndex];
-  // }
+      if (updated.count === 0) {
+        throw new BadRequestException(
+          'Incident status was modified by another request',
+        );
+      }
+
+      const updatedIncident = await tx.incident.findUniqueOrThrow({
+        where: { id },
+      });
+
+      await tx.incidentLog.create({
+        data: {
+          incidentId: id,
+          eventType: 'STATUS_CHANGED',
+          byEmployeeId: employee.id,
+          fromStatus: incidentStatus,
+          toStatus: dto.status,
+          note: dto.note ?? null,
+        },
+      });
+      return updatedIncident;
+    });
+  }
 
   // getAcknowledgments(id: string) {
   //   this.getIncidentById(id);
@@ -212,24 +241,10 @@ export class IncidentsService {
   //   this.incidentLogsService.appendStatusChange(payload);
   // }
 
-  //so make this return index or throw
-
-  // private updateIncidentTimestamp(idx: number) {
-  //   this.incidents[idx].updatedAt = new Date().toISOString();
-  // }
-
-  // private getIncidentReportByIndex(idx: number) {
-  //   return this.incidents[idx];
-  // }
-
-  // private updatedIncidentStatus(idx: number, toStatus: IncidentStatus) {
-  //   this.incidents[idx].status = toStatus;
-  // }
-
-  // private checkStatusChangeAllowed(
-  //   fromStatus: IncidentStatus,
-  //   toStatus: IncidentStatus,
-  // ) {
-  //   return this.transitions[fromStatus].includes(toStatus);
-  // }
+  private checkStatusChangeAllowed(
+    fromStatus: IncidentStatus,
+    toStatus: IncidentStatus,
+  ) {
+    return this.transitions[fromStatus].includes(toStatus);
+  }
 }

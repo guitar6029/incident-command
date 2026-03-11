@@ -90,15 +90,15 @@ export class IncidentsController {
   //   return this.incidentsService.getLogs(id, type);
   // }
 
-  // @Patch(':id/status')
-  // @UseGuards(OncallGuard)
-  // @Roles('ONCALL')
-  // updateIncidentReportStatus(
-  //   @Param('id', new ParseUUIDPipe()) id: string,
-  //   @Body() dtoPatch: UpdateIncidentStatusDto,
-  //   @Req() req: AuthenticatedRequest,
-  // ): IncidentCase {
-  //   const by = req.user.email;
-  //   return this.incidentsService.updateIncidentStatus(id, dtoPatch, by);
-  // }
+  @Patch(':id/status')
+  @UseGuards(OncallGuard)
+  @Roles('ONCALL')
+  async updateIncidentReportStatus(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateIncidentStatusDto,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<Incident> {
+    const userId = req.user.id;
+    return this.incidentsService.updateIncidentStatus(id, dto, userId);
+  }
 }
