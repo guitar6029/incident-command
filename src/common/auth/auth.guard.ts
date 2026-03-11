@@ -46,12 +46,6 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Unauthorized');
     }
 
-    if (requiredRoles.includes('IT_HELP')) {
-      if (employee.role !== EmployeeRole.IT_HELP) {
-        throw new ForbiddenException('Forbidden');
-      }
-    }
-
     req.user = {
       id: employee.id,
       email: employee.email,

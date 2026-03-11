@@ -17,7 +17,6 @@ import { IncidentsService } from './incidents.service';
 import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
 import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
 import { RequestTimingInterceptor } from 'src/common/request-timing/request-timing.interceptor';
-import { OncallGuard } from 'src/common/oncall/oncall.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
 
@@ -90,7 +89,7 @@ export class IncidentsController {
   }
 
   @Patch(':id/status')
-  @UseGuards(OncallGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('ONCALL')
   async updateIncidentReportStatus(
     @Param('id', new ParseUUIDPipe()) id: string,
