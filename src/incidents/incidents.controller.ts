@@ -81,14 +81,15 @@ export class IncidentsController {
     return this.incidentsService.acknowledgeIncident(id, dto, userId);
   }
 
-  // @Get(':id/logs')
-  // getIncidentLogReportById(
-  //   @Param('id', new ParseUUIDPipe()) id: string,
-  //   @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
-  //   type?: IncidentLogType,
-  // ) {
-  //   return this.incidentsService.getLogs(id, type);
-  // }
+  @Get(':id/logs')
+  async getIncidentLogReportById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Req() req: AuthenticatedRequest,
+    @Query('type', new ParseEnumPipe(IncidentLogType, { optional: true }))
+    type?: IncidentLogType,
+  ): Promise<IncidentLog[]> {
+    return this.incidentsService.getLogs(id, type);
+  }
 
   @Patch(':id/status')
   @UseGuards(OncallGuard)

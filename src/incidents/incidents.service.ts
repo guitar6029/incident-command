@@ -187,10 +187,10 @@ export class IncidentsService {
   //   return this.incidentLogsService.listByIdAcknowledged(id);
   // }
 
-  // getLogs(id: string, type?: IncidentLogType): IncidentLog[] {
-  //   this.getIncidentById(id);
-  //   return this.incidentLogsService.listByIncidentId(id, type);
-  // }
+  async getLogs(id: string, type?: IncidentLogType): Promise<IncidentLog[]> {
+    await this.getIncidentById(id);
+    return this.incidentLogsService.listByIncidentId(id, type);
+  }
 
   async getIncidentById(id: string): Promise<Incident> {
     const incident = await this.incidentOrThrow(id);
