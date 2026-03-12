@@ -1,10 +1,6 @@
-import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class AssignTicketDto {
-  @IsNotEmpty()
-  @IsEmail()
-  actorEmail: string;
-
-  @IsOptional()
-  assigneeEmail?: string;
+  @IsUUID()
+  assigneeId: string;
 }

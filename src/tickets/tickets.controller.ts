@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   ParseEnumPipe,
@@ -21,6 +20,7 @@ import { AssignTicketDto } from './dto/assign-ticket.dto';
 import { TicketAssignmentService } from 'src/ticket-assignment/ticket-assignment.service';
 import { AuthGuard } from 'src/common/auth/auth.guard';
 import { RolesGuard } from 'src/common/roles/roles.guard';
+import { TicketLogType } from 'generated/prisma/enums';
 
 @Controller('tickets')
 export class TicketsController {
@@ -29,31 +29,30 @@ export class TicketsController {
     private readonly ticketAssignmentService: TicketAssignmentService,
   ) {}
 
-  // @Get()
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles('IT_HELP')
-  // getTickets() {
-  //   return this.ticketService.findAll();
-  // }
+  @Get()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('IT_HELP')
+  getTickets() {
+    return this.ticketService.findAll();
+  }
 
-  // @Get(':id')
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles('IT_HELP')
-  // getTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
-  //   return this.ticketService.findById(id);
-  // }
+  @Get(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('IT_HELP')
+  getTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.ticketService.getTicketById(id);
+  }
 
-  // @Get(':id/logs')
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles('IT_HELP')
-  // getTicketLogReportById(
-  //   @Param('id', new ParseUUIDPipe()) id: string,
-  //   @Query('type', new ParseEnumPipe(TicketLogType, { optional: true }))
-  //   type?: TicketLogType,
-  // ) {
-  //   this.ticketService.findById(id);
-  //   return this.ticketLogService.listByTicketId(id, type);
-  // }
+  @Get(':id/logs')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('IT_HELP')
+  async getTicketLogReportById(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query('type', new ParseEnumPipe(TicketLogType, { optional: true }))
+    type?: TicketLogType,
+  ) {
+    return this.ticketService.getTicketLogById(id, type);
+  }
 
   @Post()
   @UseGuards(AuthGuard, RolesGuard)
@@ -66,32 +65,27 @@ export class TicketsController {
     return this.ticketService.create(userId, dto);
   }
 
-  // @Post(':id/assign')
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles('IT_HELP')
-  // assignTicket(
-  //   @Param('id', new ParseUUIDPipe()) ticketId: string,
-  //   @Body() dto: AssignTicketDto,
-  // ) {
-  //   return this.ticketAssignmentService.assignTicket(ticketId, dto);
-  // }
+  @Post(':id/assign')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('IT_HELP')
+  assignTicket(
+    @Param('id', new ParseUUIDPipe()) ticketId: string,
+    @Body() dto: AssignTicketDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.id;
+    return this.ticketAssignmentService.assignTicket(ticketId, dto, userId);
+  }
 
-  // @Patch(':id/status')
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles('IT_HELP')
-  // updateTicketStatus(
-  //   @Req() req: AuthenticatedRequest,
-  //   @Param('id', new ParseUUIDPipe()) id: string,
-  //   @Body() dto: UpdateTicketStatusDto,
-  // ) {
-  //   const by = req.user.email;
-  //   return this.ticketService.updateStatus({ id, dto, by });
-  // }
-
-  // @Delete(':id')
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles('IT_HELP')
-  // deleteTicketById(@Param('id', new ParseUUIDPipe()) id: string) {
-  //   return this.ticketService.deleteTicketById(id);
-  // }
+  @Patch(':id/status')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('IT_HELP')
+  async updateTicketStatus(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: UpdateTicketStatusDto,
+  ) {
+    const userId = req.user.id;
+    return this.ticketService.updateStatus({ id, dto, userId });
+  }
 }

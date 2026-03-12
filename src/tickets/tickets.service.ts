@@ -4,7 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { Employee, Ticket, TicketStatus } from 'generated/prisma/client';
+import {
+  Employee,
+  Ticket,
+  TicketLog,
+  TicketLogType,
+  TicketStatus,
+} from 'generated/prisma/client';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { prisma } from 'src/lib/prisma';
 
@@ -39,9 +45,20 @@ export class TicketsService {
     return ticket;
   }
 
-  async deleteTicketById(id: string): Promise<Ticket> {
-    return prisma.ticket.delete({
-      where: { id },
+  async getTicketLogById(
+    id: string,
+    ticketType?: TicketLogType,
+  ): Promise<TicketLog[]> {
+    await this.ticketOrThrow(id);
+
+    return prisma.ticketLog.findMany({
+      where: {
+        ticketId: id,
+        ...(ticketType ? { eventType: ticketType } : {}),
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
   }
 
