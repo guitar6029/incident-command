@@ -9,7 +9,9 @@ describe('IncidentAcknowledgeService', () => {
       providers: [IncidentAcknowledgeService],
     }).compile();
 
-    service = module.get<IncidentAcknowledgeService>(IncidentAcknowledgeService);
+    service = module.get<IncidentAcknowledgeService>(
+      IncidentAcknowledgeService,
+    );
   });
 
   it('should be defined', () => {

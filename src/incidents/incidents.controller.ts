@@ -15,16 +15,16 @@ import {
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentsService } from './incidents.service';
 import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
-import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
-import { RequestTimingInterceptor } from 'src/common/request-timing/request-timing.interceptor';
-import { Roles } from 'src/common/decorators/roles.decorator';
+import { IncidentLogsService } from '../incident-logs/incident-logs.service';
+import { RequestTimingInterceptor } from '../common/request-timing/request-timing.interceptor';
+import { Roles } from '../common/decorators/roles.decorator';
 import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
 
-import { IncidentLog, IncidentLogType } from 'generated/prisma/client';
-import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
-import { Incident } from 'generated/prisma/client';
-import { AuthGuard } from 'src/common/auth/auth.guard';
-import { RolesGuard } from 'src/common/roles/roles.guard';
+import { IncidentLog, IncidentLogType } from '../../generated/prisma/client';
+import { AuthenticatedRequest } from '../types/authenticated-request.type';
+import { Incident } from '../../generated/prisma/client';
+import { AuthGuard } from '../common/auth/auth.guard';
+import { RolesGuard } from '../common/roles/roles.guard';
 
 @Controller('incidents')
 @UseInterceptors(RequestTimingInterceptor)

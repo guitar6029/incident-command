@@ -10,9 +10,9 @@ import {
   TicketLog,
   TicketLogType,
   TicketStatus,
-} from 'generated/prisma/client';
+} from '../../generated/prisma/client';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
-import { prisma } from 'src/lib/prisma';
+import { prisma } from '../lib/prisma';
 
 @Injectable()
 export class TicketsService {

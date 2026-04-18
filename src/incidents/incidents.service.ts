@@ -5,12 +5,16 @@ import {
 } from '@nestjs/common';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { UpdateIncidentStatusDto } from './dto/update-incident-status.dto';
-import { IncidentLogsService } from 'src/incident-logs/incident-logs.service';
-import { IncidentAcknowledgeService } from 'src/incident-acknowledge/incident-acknowledge.service';
-import { AcknoledgeIncidentDto } from 'src/incident-acknowledge/dto/acknowledge-incident.dto';
-import { IncidentLog, IncidentLogType } from 'generated/prisma/client';
-import { prisma } from 'src/lib/prisma';
-import { Employee, Incident, IncidentStatus } from 'generated/prisma/client';
+import { IncidentLogsService } from '../incident-logs/incident-logs.service';
+import { IncidentAcknowledgeService } from '../incident-acknowledge/incident-acknowledge.service';
+import { AcknoledgeIncidentDto } from '../incident-acknowledge/dto/acknowledge-incident.dto';
+import { IncidentLog, IncidentLogType } from '../../generated/prisma/client';
+import { prisma } from '../lib/prisma';
+import {
+  Employee,
+  Incident,
+  IncidentStatus,
+} from '../../generated/prisma/client';
 
 @Injectable()
 export class IncidentsService {
@@ -48,7 +52,7 @@ export class IncidentsService {
     return incident;
   }
 
-  addToIncidents(dto: Incident) {}
+  //addToIncidents(dto: Incident) {}
 
   async getIncidents() {
     return prisma.incident.findMany({

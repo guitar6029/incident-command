@@ -13,14 +13,14 @@ import {
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { AuthenticatedRequest } from 'src/types/authenticated-request.type';
+import { Roles } from '../common/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../types/authenticated-request.type';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto';
 import { AssignTicketDto } from './dto/assign-ticket.dto';
-import { TicketAssignmentService } from 'src/ticket-assignment/ticket-assignment.service';
-import { AuthGuard } from 'src/common/auth/auth.guard';
-import { RolesGuard } from 'src/common/roles/roles.guard';
-import { TicketLogType } from 'generated/prisma/enums';
+import { TicketAssignmentService } from '../ticket-assignment/ticket-assignment.service';
+import { AuthGuard } from '../common/auth/auth.guard';
+import { RolesGuard } from '../common/roles/roles.guard';
+import { TicketLogType } from '../../generated/prisma/enums';
 
 @Controller('tickets')
 export class TicketsController {

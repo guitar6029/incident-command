@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { AssignTicketDto } from 'src/tickets/dto/assign-ticket.dto';
-import { prisma } from 'src/lib/prisma';
-import { Ticket, TicketLogType } from 'generated/prisma/client';
+import { AssignTicketDto } from '../tickets/dto/assign-ticket.dto';
+import { prisma } from '../lib/prisma';
+import { Ticket, TicketLogType } from '../../generated/prisma/client';
 @Injectable()
 export class TicketAssignmentService {
   async assignTicket(

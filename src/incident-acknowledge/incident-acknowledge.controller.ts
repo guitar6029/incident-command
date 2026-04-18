@@ -3,5 +3,7 @@ import { IncidentAcknowledgeService } from './incident-acknowledge.service';
 
 @Controller('incident-acknowledge')
 export class IncidentAcknowledgeController {
-  constructor(private readonly incidentAcknowledgeService: IncidentAcknowledgeService) {}
+  constructor(
+    private readonly incidentAcknowledgeService: IncidentAcknowledgeService,
+  ) {}
 }

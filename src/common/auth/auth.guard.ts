@@ -10,8 +10,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { prisma } from 'src/lib/prisma';
-import { EmployeeRole } from 'generated/prisma/enums';
+import { prisma } from '../../lib/prisma';
+import { EmployeeRole } from '../../../generated/prisma/enums';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

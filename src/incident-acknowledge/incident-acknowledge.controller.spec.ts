@@ -11,7 +11,9 @@ describe('IncidentAcknowledgeController', () => {
       providers: [IncidentAcknowledgeService],
     }).compile();
 
-    controller = module.get<IncidentAcknowledgeController>(IncidentAcknowledgeController);
+    controller = module.get<IncidentAcknowledgeController>(
+      IncidentAcknowledgeController,
+    );
   });
 
   it('should be defined', () => {
