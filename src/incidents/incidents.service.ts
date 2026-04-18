@@ -52,8 +52,6 @@ export class IncidentsService {
     return incident;
   }
 
-  //addToIncidents(dto: Incident) {}
-
   async getIncidents() {
     return prisma.incident.findMany({
       orderBy: {
